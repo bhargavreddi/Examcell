@@ -78,32 +78,32 @@ WSGI_APPLICATION = 'Examcell.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-DATABASES = {
-     'default': {
-         'ENGINE': 'django.db.backends.mysql',
-         'NAME': 'examcell',
-         'USER': 'django',
-         'PASSWORD': 'django',
-         'HOST': 'localhost',
-         'PORT': '3306',
-         'OPTION' : {
-             'autocommit' : True
-         }
-     }
-}
 # DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'mvgrexamcell$Examcell',
-#         'USER': 'mvgrexamcell',
-#         'PASSWORD': 'djangoadmin',
-#         'HOST': 'mvgrexamcell.mysql.pythonanywhere-services.com',
-#         'PORT': '3306',
-#         'OPTION' : {
-#             'autocommit' : True
-#         }
-#     }
+#      'default': {
+#          'ENGINE': 'django.db.backends.mysql',
+#          'NAME': 'examcell',
+#          'USER': 'django',
+#          'PASSWORD': 'django',
+#          'HOST': 'localhost',
+#          'PORT': '3306',
+#          'OPTION' : {
+#              'autocommit' : True
+#          }
+#      }
 # }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'mvgrexamcell$Examcell',
+        'USER': 'mvgrexamcell',
+        'PASSWORD': 'djangoadmin',
+        'HOST': 'mvgrexamcell.mysql.pythonanywhere-services.com',
+        'PORT': '3306',
+        'OPTION' : {
+            'autocommit' : True
+        }
+    }
+}
 
 
 # Password validation

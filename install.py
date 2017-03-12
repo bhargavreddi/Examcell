@@ -4,8 +4,8 @@ import sys,os
 from openpyxl import load_workbook
 #from django.core.management import setup_environ
 #from MissionRnD import settings
-#sys.path.append("/home/mvgrexamcell/Examcell")
-sys.path.append("/home/bhargav/Examcell")
+sys.path.append("/home/mvgrexamcell/Examcell")
+#sys.path.append("/home/bhargav/Examcell")
 os.environ["DJANGO_SETTINGS_MODULE"] = "Examcell.settings"
 django.setup()
 from Examination.models import Department,Regulation,ClassroomCapacity, Year, Semester, Months, ExaminationType, Student
@@ -110,4 +110,4 @@ while True:
     obj.faculty_name = name
     obj.dept = Department.objects.all().get(name='Computer Science and Engineering')
     obj.save()
-    row = row + 1   
+    row = row + 1
