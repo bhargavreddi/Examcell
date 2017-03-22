@@ -5,10 +5,11 @@ from openpyxl import load_workbook
 #from django.core.management import setup_environ
 #from MissionRnD import settings
 sys.path.append("/home/mvgrexamcell/Examcell")
-#sys.path.append("/home/bhargav/Examcell")
+sys.path.append("/home/bhargav/Examcell")
 os.environ["DJANGO_SETTINGS_MODULE"] = "Examcell.settings"
 django.setup()
-from Examination.models import Department,Regulation,ClassroomCapacity, Year, Semester, Months, ExaminationType, Student
+from Examination.models import Department,Regulation,ClassroomCapacity, Year, Semester, Months, ExaminationType, Student, \
+    Day, Examination, Subject
 from Examination.models import Faculty
 cse = Department()
 cse.name = 'Computer Science and Engineering'
@@ -69,7 +70,7 @@ for month in months:
     obj = Months()
     obj.month = month
     obj.save()
-examinationType = ['Regular', 'Supplimentary','Mid Term']
+examinationType = ['Regular', 'Supply','Mid Term']
 for type in examinationType:
     obj = ExaminationType()
     obj.type = type
@@ -111,3 +112,36 @@ while True:
     obj.dept = Department.objects.all().get(name='Computer Science and Engineering')
     obj.save()
     row = row + 1
+
+
+days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+for day in days:
+    obj = Day()
+    obj.day = day
+    obj.save()
+
+
+obj = Examination()
+obj.examination_name = "4-2 II Mid Examination 2017"
+obj.type = ExaminationType.objects.get(type = 'Mid Term')
+obj.month = Months.objects.get(month='April')
+obj.year = 2017
+obj.save()
+
+subjects = [('RT42051','Distributed Systems','R13',False),('RT42052','Management Science','R13',False),('RT42043E','Cloud Computing','R13',False),('RT42053A','Human Computer Interaction','R13',False)]
+for subject in subjects:
+    obj = Subject()
+    obj.subject_code = subject[0]
+    obj.subject_name = subject[1]
+    obj.regulation = Regulation.objects.get(regulation=subject[2])
+    obj.drawingType = False
+    obj.save()
+
+obj = Student()
+obj.student_id = '100'
+obj.student_name = 'NULL'
+obj.student_semester = Semester.objects.get(semester=1)
+obj.student_year = Year.objects.get(year=1)
+obj.regulation = Regulation.objects.get(regulation='R13')
+obj.dept = Department.objects.get(name='Computer Science and Engineering')
+obj.save()

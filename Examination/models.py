@@ -41,16 +41,17 @@ class Subject(models.Model):
         return self.subject_code
 class ClassroomCapacity(models.Model):
     size = models.IntegerField(default=24)
-    def __str__(self):
-        return str(self.size)
+
+
 class Classroom(models.Model):
     classroom_number = models.CharField(max_length=20,primary_key=True)
     dept = models.ForeignKey(Department)
     capacity = models.ForeignKey(ClassroomCapacity)
     def __str__(self):
-        return self.capacity
+        return self.classroom_number
 class ExaminationType(models.Model):
     type = models.CharField(max_length=30)
+    duration = models.FloatField(default=3)
     def __str__(self):
         return self.type
 class Months(models.Model):
@@ -59,8 +60,8 @@ class Months(models.Model):
         return self.month
 class Examination(models.Model):
     examination_name = models.CharField(max_length=225)
-    type = models.CharField(max_length=30)
-    month = models.CharField(max_length=20)
+    type = models.ForeignKey(ExaminationType)
+    month = models.ForeignKey(Months)
     year = models.IntegerField()
     def __str__(self):
         return self.examination_name
@@ -77,8 +78,9 @@ class Timetable(models.Model):
     subject = models.ForeignKey(Subject)
     examination = models.ForeignKey(Examination)
     regulation = models.ForeignKey(Regulation)
-    set_number = models.IntegerField(default=1)
-    max_set = models.IntegerField(default=1)
+    time = models.TimeField(default='10:00')
+    set_number = models.IntegerField(default=0)
+    max_set = models.IntegerField(default=0)
     class Meta:
         unique_together = (("date","subject"),)
 class InvigilationCount(models.Model):
@@ -91,6 +93,8 @@ class Invigilation(models.Model):
     classroom = models.ForeignKey(Classroom)
     faculty = models.ForeignKey(Faculty)
     status = models.CharField(max_length=50)
+    date = models.DateField()
+    time = models.TimeField()
     class Meta:
         unique_together = (("examination","classroom","faculty"),)
 class Arrangement(models.Model):
@@ -100,9 +104,30 @@ class Arrangement(models.Model):
     date = models.DateField()
     subject = models.ForeignKey(Subject)
     time = models.TimeField()
-    set_number = models.IntegerField()
-    malpractice = models.BooleanField()
-    blankomr = models.BooleanField()
-    attendance = models.BooleanField()
+    set_number = models.IntegerField(default=0)
+    malpractice = models.BooleanField(default=False)
+    blankomr = models.BooleanField(default=False)
+    attendance = models.BooleanField(default=True)
+
+    def __str__(self):
+        return str(self.id)
     class Meta:
-        unique_together = (("examination","student","date","subject"),)
+        unique_together = (("id","examination","date","subject"),)
+
+class Day(models.Model):
+    day = models.CharField(max_length=40)
+
+    def __str___(self):
+        return self.day
+
+class FacultyTimetable(models.Model):
+    faculty = models.ForeignKey(Faculty)
+    day = models.ForeignKey(Day)
+    hour1 = models.CharField(max_length=30)
+    hour2 = models.CharField(max_length=30)
+    hour3 = models.CharField(max_length=30)
+    hour4 = models.CharField(max_length=30)
+    hour5 = models.CharField(max_length=30)
+    hour6 = models.CharField(max_length=30)
+    hour7 = models.CharField(max_length=30)
+    hour8 = models.CharField(max_length=30)
