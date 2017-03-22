@@ -12,7 +12,7 @@ subject_list = Subject.objects.all().values_list('subject_code')
 examination = Examination.objects.get(examination_name = '4-2 II Mid Examination 2017')
 regulation = Regulation.objects.get(regulation = 'R13')
 type = ExaminationType.objects.get(type='Mid Term')
-student_list = Student.objects.all().value_list('student_id')
+student_list = Student.objects.all().values_list('student_id')
 
 for subject_tuple in subject_list:
 	subject = Subject.objects.get(subject_code = subject_tuple[0])
