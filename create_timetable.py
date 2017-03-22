@@ -24,5 +24,6 @@ for subject_code in subject_codes:
 	obj.examination = examination
 	obj.regulation = regulation
 	obj.save()
+	index = index + 1
 
 
