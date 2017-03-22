@@ -13,7 +13,7 @@ examination = Examination.objects.get(examination_name = '4-2 II Mid Examination
 regulation = Regulation.objects.get(regulation = 'R13')
 type = ExaminationType.objects.get(type='Mid Term')
 student_list = Student.objects.all().values_list('student_id')
-
+RegisteredStudents.objects.all().delete()
 for subject_tuple in subject_list:
 	subject = Subject.objects.get(subject_code = subject_tuple[0])
 	for student_tuple in student_list:
