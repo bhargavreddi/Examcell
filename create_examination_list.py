@@ -7,7 +7,7 @@ sys.path.append("/home/bhargav/Examcell")
 sys.path.append("/home/mvgrexamcell/Examcell")
 os.environ["DJANGO_SETTINGS_MODULE"] = "Examcell.settings"
 django.setup()
-from Examination.models import Subject,Examination,ExaminationType,Students,RegisteredStudents,Regulation
+from Examination.models import Subject,Examination,ExaminationType,Student,RegisteredStudents,Regulation
 subject_list = Subject.objects.all().values_list('subject_code')
 examination = Examination.objects.get(examination_name = '4-2 II Mid Examination 2017')
 regulation = Regulation.objects.get(regulation = 'R13')
