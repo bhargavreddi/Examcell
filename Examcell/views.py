@@ -414,6 +414,22 @@ def retreiveClassrooms(request,id,yyyy,mm,dd,hh,min):
         return JsonResponse(data)
 
 @api_view(['GET'])
+def retreiveSubjects(request,id,yyyy,mm,dd,hh,min):
+    if request.method == 'GET':
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        subject_list_tuple = Arrangement.objects.filter(examination__id=id, date=date, time=time).distinct().values_list('subject')
+        subjects = []
+        for tuple in subject_list_tuple:
+            obj = Subject.objects.get(subject_code=tuple[0])
+            time_obj = Timetable.objects.get(subject=obj)
+            subjects.append({"subject_code":tuple[0],"subject_name" : obj.subject_name,'max_set' : time_obj.max_set,"start_set" : time_obj.set_number })
+        data = {}
+        data['subject_list'] = subjects
+
+        return JsonResponse(data)
+
+@api_view(['GET'])
 def studentsClassroom(request,id,yyyy,mm,dd,hh,min,cs):
     if request.method == 'GET':
         date = "{0}-{1}-{2}".format(yyyy, mm, dd)

@@ -37,6 +37,7 @@ urlpatterns = [
     url(r'^api/getClassrooms/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.getClassrooms),
     url(r'^api/arrangeStudents/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.arrangeStudents),
     url(r'^api/retreiveClassrooms/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.retreiveClassrooms),
+    url(r'^api/retreiveSubjects/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.retreiveSubjects),
     url(r'^api/studentsClassroom/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/(?P<cs>.*)/$',views.studentsClassroom),
     url(r'^api/isSetAllocated/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.isSetAllocated),
 ]
