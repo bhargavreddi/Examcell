@@ -31,11 +31,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="urls.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="urls.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Examcell/urls.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="482">
-              <caret line="42" column="1" lean-forward="true" selection-start-line="42" selection-start-column="1" selection-end-line="42" selection-end-column="1" />
+            <state relative-caret-position="267">
+              <caret line="40" column="133" lean-forward="true" selection-start-line="40" selection-start-column="133" selection-end-line="40" selection-end-column="133" />
               <folding />
             </state>
           </provider>
@@ -44,8 +44,8 @@
       <file leaf-file-name="views.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Examcell/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2787">
-              <caret line="425" column="150" lean-forward="false" selection-start-line="425" selection-start-column="150" selection-end-line="425" selection-end-column="150" />
+            <state relative-caret-position="124">
+              <caret line="432" column="4" lean-forward="false" selection-start-line="432" selection-start-column="4" selection-end-line="432" selection-end-column="4" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -56,18 +56,18 @@
       <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Examination/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="219">
+            <state relative-caret-position="164">
               <caret line="99" column="6" lean-forward="false" selection-start-line="99" selection-start-column="6" selection-end-line="99" selection-end-column="6" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="settings.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="settings.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Examcell/settings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="81" column="0" lean-forward="false" selection-start-line="81" selection-start-column="0" selection-end-line="93" selection-end-column="1" />
+            <state relative-caret-position="705">
+              <caret line="94" column="0" lean-forward="false" selection-start-line="94" selection-start-column="0" selection-end-line="106" selection-end-column="1" />
               <folding />
             </state>
           </provider>
@@ -99,9 +99,9 @@
         <option value="$PROJECT_DIR$/upload_classrooms.py" />
         <option value="$PROJECT_DIR$/upload_faulty_timetable.py" />
         <option value="$PROJECT_DIR$/install.py" />
-        <option value="$PROJECT_DIR$/Examcell/settings.py" />
         <option value="$PROJECT_DIR$/Examcell/urls.py" />
         <option value="$PROJECT_DIR$/Examcell/views.py" />
+        <option value="$PROJECT_DIR$/Examcell/settings.py" />
       </list>
     </option>
   </component>
@@ -132,6 +132,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -174,8 +176,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -612,7 +612,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Examcell/views.py</url>
-          <line>536</line>
+          <line>557</line>
           <option name="timeStamp" value="48" />
         </line-breakpoint>
       </breakpoints>
@@ -623,7 +623,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="53" />
+      <option name="time" value="59" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -980,36 +980,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Examcell/settings.py">
+    <entry file="file://$PROJECT_DIR$/Examination/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="81" column="0" lean-forward="false" selection-start-line="81" selection-start-column="0" selection-end-line="93" selection-end-column="1" />
+        <state relative-caret-position="164">
+          <caret line="99" column="6" lean-forward="false" selection-start-line="99" selection-start-column="6" selection-end-line="99" selection-end-column="6" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Examination/models.py">
+    <entry file="file://$PROJECT_DIR$/Examcell/urls.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="219">
-          <caret line="99" column="6" lean-forward="false" selection-start-line="99" selection-start-column="6" selection-end-line="99" selection-end-column="6" />
+        <state relative-caret-position="267">
+          <caret line="40" column="133" lean-forward="true" selection-start-line="40" selection-start-column="133" selection-end-line="40" selection-end-column="133" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Examcell/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2787">
-          <caret line="425" column="150" lean-forward="false" selection-start-line="425" selection-start-column="150" selection-end-line="425" selection-end-column="150" />
+        <state relative-caret-position="124">
+          <caret line="432" column="4" lean-forward="false" selection-start-line="432" selection-start-column="4" selection-end-line="432" selection-end-column="4" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Examcell/urls.py">
+    <entry file="file://$PROJECT_DIR$/Examcell/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="482">
-          <caret line="42" column="1" lean-forward="true" selection-start-line="42" selection-start-column="1" selection-end-line="42" selection-end-column="1" />
+        <state relative-caret-position="705">
+          <caret line="94" column="0" lean-forward="false" selection-start-line="94" selection-start-column="0" selection-end-line="106" selection-end-column="1" />
           <folding />
         </state>
       </provider>

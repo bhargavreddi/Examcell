@@ -434,10 +434,10 @@ def studentsClassroom(request,id,yyyy,mm,dd,hh,min,cs):
     if request.method == 'GET':
         date = "{0}-{1}-{2}".format(yyyy, mm, dd)
         time = "{0}:{1}".format(hh, min)
-        student_list_tuple = Arrangement.objects.filter(examination__id=id, date=date, time=time,classroom__classroom_number=cs).values_list('student')
+        student_list_tuple = Arrangement.objects.filter(examination__id=id, date=date, time=time,classroom__classroom_number=cs).values_list('student','set_number')
         student_list = []
         for tuple in student_list_tuple:
-            student_list.append({'regno' : tuple[0]})
+            student_list.append({'regno' : tuple[0],'set_number' : tuple[1]})
         data = {}
         data['student_list'] = student_list
         return JsonResponse(data)
@@ -459,7 +459,28 @@ def isSetAllocated(request,id,yyyy,mm,dd,hh,min):
             }
         return JsonResponse(status)
 
-
+@api_view(['POST'])
+def setSubjects(request,id,yyyy,mm,dd,hh,min):
+    if request.method == 'POST':
+        data = request.data
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        subject_list = data.subjects
+        for subject_dict in subject_list:
+            try:
+                obj = Timetable.objects.get(examination__id=id, date=date, time=time,subject__subject_code=subject_dict['subject'])
+                obj.set_number = subject_dict.start_set
+                obj.max_set = subject_dict.max_set
+                obj.save()
+            except Exception:
+                status = {
+                    'status': 'failed'
+                }
+                return JsonResponse(status)
+        status = {
+            'status': 'success'
+        }
+        return JsonResponse(status)
 
 @api_view(['POST'])
 def arrangeStudents(request,id,yyyy,mm,dd,hh,min):

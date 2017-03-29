@@ -40,4 +40,5 @@ urlpatterns = [
     url(r'^api/retreiveSubjects/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.retreiveSubjects),
     url(r'^api/studentsClassroom/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/(?P<cs>.*)/$',views.studentsClassroom),
     url(r'^api/isSetAllocated/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.isSetAllocated),
+    url(r'^api/setSubjects/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.setSubjects),
 ]
