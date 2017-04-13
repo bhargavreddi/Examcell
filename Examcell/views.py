@@ -10,7 +10,8 @@ from rest_framework.response import Response
 from Examination.serializer import StudentSerializer, DepartmentSerializer, RegulationSerializer, YearSerializer, \
     SemesterSerializer, ExaminationSerializer
 from Examination.models import Student, Department, Regulation, Year, Semester, Examination, FacultyTimetable, Faculty, \
-    Day, Timetable, Subject, RegisteredStudents, ExaminationType, Classroom, Arrangement, ClassroomCapacity
+    Day, Timetable, Subject, RegisteredStudents, ExaminationType, Classroom, Arrangement, ClassroomCapacity, \
+    Invigilation, InvigilationCount
 
 
 @api_view(['GET'])
@@ -442,13 +443,157 @@ def studentsClassroom(request,id,yyyy,mm,dd,hh,min,cs):
         data['student_list'] = student_list
         return JsonResponse(data)
 
+@api_view(['GET'])
+def studentsSubject(request,id,yyyy,mm,dd,hh,min,sub_code):
+    if request.method == 'GET':
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        student_list_tuple = Arrangement.objects.filter(examination__id=id, date=date, time=time,subject__subject_code = sub_code).values_list('student')
+        student_list = []
+        for tuple in student_list_tuple:
+            if tuple[0] == '1':
+                continue
+            student_list.append({'regno':tuple[0]})
+        data = {}
+        data['student_list'] = student_list
+        obj = Timetable.objects.get(subject__subject_code=sub_code)
+        data['start_set'] = obj.set_number
+        data['max_set'] = obj.max_set
+        return JsonResponse(data)
+
+@api_view(['GET','POST'])
+def getStudentDetails(request,id,yyyy,mm,dd,hh,min,regno):
+    if request.method == 'GET':
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        student = Arrangement.objects.get(examination__id=id, date=date, time=time,student__student_id=regno)
+        data  = {}
+        data['attendance'] = student.attendance
+        data['malpractice'] = student.malpractice
+        data['blankomr'] = student.blankomr
+        return JsonResponse(data)
+    elif request.method == 'POST':
+        data = request.data
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        student = Arrangement.objects.get(examination__id=id, date=date, time=time, student__student_id=regno)
+        student.attendance = data['attendance']
+        student.malpractice = data['malpractice']
+        student.blankomr = data['blankomr']
+        student.save()
+        data = {
+            'status' : 'success'
+        }
+        return JsonResponse(data)
+
+
+@api_view(['GET'])
+def forceInvigilation(request,id,yyyy,mm,dd,hh,min,faculty):
+    if request.method == 'GET':
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        obj = Invigilation.objects.get(examination__id=id, date=date, time=time,faculty__faculty_id=faculty)
+        if obj.status != 'CHANGED':
+            obj.status = "FORCED"
+            data = {
+                'status': 'success'
+            }
+        else:
+            data = {
+                'status': 'fail'
+            }
+        obj.save()
+        return JsonResponse(data)
+
+@api_view(['GET'])
+def changeInvigilation(request,id,yyyy,mm,dd,hh,min,faculty):
+    if request.method == 'GET':
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        obj = Invigilation.objects.get(examination__id=id, date=date, time=time, faculty__faculty_id=faculty)
+        obj.status = "CHANGED"
+        obj.save()
+        time1 = time
+        limit = 1
+        import datetime
+        date_temp = date
+        date = date.replace("-", "")
+        day = weekdays[datetime.datetime.strptime(date, "%Y%m%d").date().weekday()]
+        time_array = time.split(':')
+        exam_obj = Examination.objects.get(id=id)
+        year = exam_obj.examination_name.split('-')
+        year = year[0]
+        if exam_obj.type.type == "Mid Term":
+            duration = [1, 30]
+        else:
+            duration = [3, 0]
+        min = (int(time_array[1]) + duration[1]) % 60
+        hr = (int(time_array[0]) + duration[0]) + (int(time_array[1]) + duration[1]) / 60
+        time2 = "{0}:{1}".format(hr, min)
+        faculty_list = getInvigilationList(time1, time2,date_temp, day, year, limit, id)
+        new_obj = Invigilation()
+        new_obj.faculty = Faculty.objects.get(faculty_id=faculty_list[0])
+        new_obj.classroom = obj.classroom
+        new_obj.date = obj.date
+        new_obj.time = obj.time
+        new_obj.status = "PENDING"
+        new_obj.examination = obj.examination
+        new_obj.save()
+        sendInvigilationRequest(id,faculty_list[0],date_temp,time,obj.classroom.classroom_number)
+        changeInvigilationRequest(id,obj.faculty.faculty_id,date_temp,time,obj.classroom.classroom_number)
+        data = {
+            'faculty_id' : faculty_list[0],
+            'classroom' : obj.classroom.classroom_number,
+            'faculty_name' : Faculty.objects.get(faculty_id=faculty_list[0]).faculty_name
+        }
+        return JsonResponse(data)
+
+@api_view(['GET'])
+def acceptInvigilation(request,id,yyyy,mm,dd,hh,min,faculty):
+    if request.method == 'GET':
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        obj = Invigilation.objects.get(examination__id = id,date= date,time=time,faculty__faculty_id=faculty)
+        if obj.status == 'PENDING':
+            obj.status = 'ACCEPTED'
+            obj.save()
+            data = {
+                'status' : 'success'
+            }
+        else:
+            data = {
+                'status': 'failed'
+            }
+        return JsonResponse(data)
+@api_view(['GET'])
+def rejectInvigilation(request,id,yyyy,mm,dd,hh,min,faculty):
+    if request.method == 'GET':
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        obj = Invigilation.objects.get(examination__id=id, date=date, time=time, faculty__faculty_id=faculty)
+        if obj.status == 'PENDING':
+            obj.status = 'REJECTED'
+            obj.save()
+            data = {
+                'status': 'success'
+            }
+        else:
+            data = {
+                'status': 'failed'
+            }
+        return JsonResponse(data)
 
 @api_view(['GET'])
 def isSetAllocated(request,id,yyyy,mm,dd,hh,min):
     if request.method == 'GET':
         date = "{0}-{1}-{2}".format(yyyy, mm, dd)
         time = "{0}:{1}".format(hh, min)
-        count = Timetable.objects.filter(examination__id=id, date=date, time=time,set_number =0).count()
+        obj = Timetable.objects.filter(examination__id=id, date=date, time=time)
+        count = 0
+        for subject in obj:
+            if subject.set_number == 0:
+                count = 1
+                break
         if count == 0:
             status = {
                 'status' : 'true'
@@ -459,28 +604,233 @@ def isSetAllocated(request,id,yyyy,mm,dd,hh,min):
             }
         return JsonResponse(status)
 
+
+def assignSetNumber(exam_id,date,time):
+    subjects_list = Timetable.objects.filter(examination__id=exam_id, date=date, time=time)
+    for subject in subjects_list:
+        dept_list = Department.objects.all()
+        for dept in dept_list:
+            if dept.name == 'Unknown':
+                continue
+            students = Arrangement.objects.filter(examination__id=exam_id, date=date, time=time,student__dept__name=dept.name)
+            count = subject.set_number
+            max_set = subject.max_set
+            for student in students:
+                student.set_number = count
+                count = count + 1
+                if count > max_set:
+                    count = 1
+                student.save()
+
 @api_view(['POST'])
 def setSubjects(request,id,yyyy,mm,dd,hh,min):
     if request.method == 'POST':
         data = request.data
         date = "{0}-{1}-{2}".format(yyyy, mm, dd)
         time = "{0}:{1}".format(hh, min)
-        subject_list = data.subjects
+        subject_list = data['subjects']
         for subject_dict in subject_list:
             try:
                 obj = Timetable.objects.get(examination__id=id, date=date, time=time,subject__subject_code=subject_dict['subject'])
-                obj.set_number = subject_dict.start_set
-                obj.max_set = subject_dict.max_set
+                obj.set_number = subject_dict['start_set']
+                obj.max_set = subject_dict['max_set']
                 obj.save()
             except Exception:
                 status = {
                     'status': 'failed'
                 }
                 return JsonResponse(status)
+        try:
+            assignSetNumber(id,date,time)
+        except Exception as e:
+            status = {
+                'status': 'failed'
+            }
+            return JsonResponse(status)
         status = {
             'status': 'success'
         }
         return JsonResponse(status)
+
+#Invigilation Allocation
+time = ["9:00","9:50","10:40","11:30","12:20","13:10","14:00","14:50","15:40"]
+weekdays = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+def compare(time1,time2):
+    time_array1 = time1.split(":")
+    time_array2 = time2.split(":")
+
+    if int(time_array1[0]) > int(time_array2[0]):
+        return True
+    elif int(time_array1[0]) == int(time_array2[0]):
+        if int(time_array1[1]) == int(time_array2[1]):
+            return False
+        elif int(time_array1[1]) > int(time_array2[1]):
+            return True
+        else:
+            return False
+    else:
+        return False
+def inIndex(t):
+    index = 0
+    values = range(len(time))
+    for i in values:
+        if(compare(t,time[i]) == False):
+            index = i
+            break
+    else:
+        return 7
+    return index
+
+def outIndex(t):
+    index = 0
+    values = range(len(time))
+    values.reverse()
+    for i in values:
+        if(compare(t,time[i]) == True):
+            index = i
+            break
+    else:
+        return 7
+    return index
+
+
+
+def getInvigilationList(time1,time2,date,day,year,limit,examination_id):
+    fac_list = FacultyTimetable.objects.filter(day__day = day).values()
+    indices = {0:'hour1',1:'hour2',2:'hour3',3:'hour4',4:'hour5',5:'hour6',6:'hour7',7:'hour8'}
+    index1= outIndex(time1)
+    index2 = inIndex(time2)
+    count = 0
+    faculty_list = []
+    flag = True
+    for d in fac_list:
+        flag = True
+        for i in range(index1,index2):
+            try:
+                array = d[indices[i]].split('-')
+                array = array[1]
+            except Exception:
+                array = 'None'
+            if (d[indices[i]] == 'Free' or array in year):
+                pass
+            else:
+                flag = False
+        if (flag):
+            fac_obj_count = InvigilationCount.objects.get(faculty__faculty_id=d['faculty_id'])
+            inv_count = Invigilation.objects.filter(faculty__faculty_id=d['faculty_id'],examination = Examination.objects.get(id = examination_id)).count()
+            temp_count = Invigilation.objects.filter(faculty__faculty_id=d['faculty_id'],examination = Examination.objects.get(id = examination_id),date=date).count()
+            if fac_obj_count.remaining != 0 and inv_count <2 and temp_count == 0:
+                faculty_list.append(d['faculty_id'])
+                count = count + 1
+            if count == limit:
+                break
+
+    if count < limit:
+        for d in fac_list:
+            if d['faculty_id'] in faculty_list:
+                pass
+            else:
+                inv_count = Invigilation.objects.filter(faculty__faculty_id=d['faculty_id'],
+                                                        examination=Examination.objects.get(id=examination_id)).count()
+                temp_count = Invigilation.objects.filter(faculty__faculty_id=d['faculty_id'],
+                                                         examination=Examination.objects.get(id=examination_id),
+                                                         date=date).count()
+                if inv_count < 2 and temp_count == 0:
+                    faculty_list.append(d['faculty_id'])
+                    count = count + 1
+            if count == limit:
+                break
+        else:
+            for d in fac_list:
+                temp_count = Invigilation.objects.filter(faculty__faculty_id=d['faculty_id'],
+                                                         examination=Examination.objects.get(id=examination_id),
+                                                         date=date).count()
+                if d['faculty_id'] in faculty_list or temp_count != 0:
+                    pass
+                else:
+                    faculty_list.append(d['faculty_id'])
+                    count = count + 1
+                if count == limit:
+                    break
+    return faculty_list
+
+def sendInvigilationRequest(exam_id,faculty,date,time,classroom):
+    pass
+
+def changeInvigilationRequest(exam_id,faculty,date,time,classroom):
+    pass
+
+def forceInvigilationRequest(exam_id,faculty,date,time,classroom):
+    pass
+
+def allocateInvigilation(exam_id,date,time,classroom_list,drawing_hall_list):
+    hall_list = classroom_list + drawing_hall_list
+    limit = 0
+    for hall in hall_list:
+        obj = Classroom.objects.get(classroom_number=hall)
+        if obj.capacity.size == 56:
+            limit = limit + 2
+        else:
+            limit = limit + 1
+    time1 = time
+    import datetime
+    date_temp = date
+    date = date.replace("-","")
+    day = weekdays[datetime.datetime.strptime(date, "%Y%m%d").date().weekday()]
+    time_array = time.split(':')
+    exam_obj = Examination.objects.get(id=exam_id)
+    year = exam_obj.examination_name.split('-')
+    year = year[0]
+    if exam_obj.type.type == "Mid Term":
+        duration = [1,30]
+    else:
+        duration = [3,0]
+    min = (int(time_array[1]) + duration[1]) % 60
+    hr = (int(time_array[0])+ duration[0]) + (int(time_array[1]) + duration[1]) / 60
+    time2 = "{0}:{1}".format(hr,min)
+    faculty_list = getInvigilationList(time1, time2,date_temp, day, year, limit, exam_id)
+    index = 0
+    faculty_tuples = Invigilation.objects.filter(examination__id = exam_id,date = date_temp,time = time).values_list('faculty')
+    Invigilation.objects.filter(examination__id=exam_id, date=date_temp, time=time).delete()
+    for faculty_tuple in faculty_tuples:
+        inv_count = InvigilationCount.objects.get(faculty__faculty_id=faculty_tuple[0])
+        inv_count.remaining = inv_count + 1
+        inv_count.assigned = inv_count - 1
+        inv_count.save()
+    for hall in hall_list:
+        obj = Classroom.objects.get(classroom_number=hall)
+        if obj.capacity.size == 56:
+            for i in range(2):
+                inv_obj = Invigilation()
+                inv_obj.faculty = Faculty.objects.get(faculty_id=faculty_list[index])
+                inv_obj.classroom = obj
+                inv_obj.status = "PENDING"
+                inv_obj.date = date_temp
+                inv_obj.time = time
+                inv_obj.examination = exam_obj
+                inv_obj.save()
+                inv_count = InvigilationCount.objects.get(faculty__faculty_id=faculty_list[index])
+                inv_count.remaining = inv_count.remaining - 1
+                inv_count.assigned = inv_count.assigned + 1
+                inv_count.save()
+                sendInvigilationRequest(exam_id,faculty_list[index],date_temp,time,hall)
+                index = index + 1
+
+        else:
+            inv_obj = Invigilation()
+            inv_obj.faculty = Faculty.objects.get(faculty_id=faculty_list[index])
+            inv_obj.classroom = obj
+            inv_obj.status = "PENDING"
+            inv_obj.date = date_temp
+            inv_obj.time = time
+            inv_obj.examination = exam_obj
+            inv_obj.save()
+            inv_count = InvigilationCount.objects.get(faculty__faculty_id=faculty_list[index])
+            inv_count.remaining = inv_count.remaining - 1
+            inv_count.assigned = inv_count.assigned + 1
+            inv_count.save()
+            sendInvigilationRequest(exam_id,faculty_list[index], date_temp, time, hall)
+            index = index + 1
 
 @api_view(['POST'])
 def arrangeStudents(request,id,yyyy,mm,dd,hh,min):
@@ -489,6 +839,7 @@ def arrangeStudents(request,id,yyyy,mm,dd,hh,min):
         time = "{0}:{1}".format(hh, min)
         classroom = request.data.get('classrooms')
         drawing_hall = request.data.get('drawinghalls')
+        allocateInvigilation(id,date,time,classroom,drawing_hall)
         subjects_list = Timetable.objects.filter(examination__id=id, date=date, time=time).values_list('subject')
         dhsubjects =[]
         subjects = []
@@ -500,12 +851,15 @@ def arrangeStudents(request,id,yyyy,mm,dd,hh,min):
                 subjects.append(subject[0])
         Arrangement.objects.filter(examination__id=id,date=date,time=time).delete()
         hall_fill = 0
+        insert_values = 0
         try:
             hall_size = Classroom.objects.get(classroom_number=drawing_hall[0]).capacity.size
             hall = drawing_hall[0]
             for dhsubject in dhsubjects:
                 depts = Department.objects.values_list('name')
                 for dept in depts:
+                    if dept[0] == 'Unknown':
+                        pass
                     list = RegisteredStudents.objects.filter(examination__id=id, subject__subject_code=dhsubject,student__dept__name=dept[0]).values_list('student')
                     for student in list:
                         obj = Arrangement()
@@ -517,11 +871,28 @@ def arrangeStudents(request,id,yyyy,mm,dd,hh,min):
                         obj.subject = Subject.objects.get(subject_code=dhsubject)
                         obj.save()
                         hall_fill =hall_fill + 1
+                        insert_values = insert_values + 1
                         if hall_size == hall_fill:
                             hall_fill = 0
                             del drawing_hall[0]
                             hall_size = Classroom.objects.get(classroom_number=drawing_hall[0]).capacity.size
                             hall = drawing_hall[0]
+                    if insert_values != 0:
+                        temp = 4 - insert_values % 4
+                        insert_values = 0
+                        for i in range(temp):
+                            obj = Arrangement()
+                            obj.student = Student.objects.get(student_id='1')
+                            obj.classroom = Classroom.objects.get(classroom_number=hall)
+                            obj.examination = Examination.objects.get(id=id)
+                            obj.date = date
+                            obj.time = time
+                            obj.subject = Subject.objects.get(subject_code=dhsubject)
+                            obj.set_number = 0
+                            obj.malpractice = False
+                            obj.blankomr = False
+                            obj.attendance = True
+                            obj.save()
         except Exception:
             pass
 
@@ -533,6 +904,8 @@ def arrangeStudents(request,id,yyyy,mm,dd,hh,min):
             for dhsubject in subjects:
                 depts = Department.objects.values_list('name')
                 for dept in depts:
+                    if dept[0] == 'Unknown':
+                        continue
                     list = RegisteredStudents.objects.filter(examination__id=id, subject__subject_code=dhsubject,
                                                              student__dept__name=dept[0]).values_list('student')
                     for student in list:
@@ -560,7 +933,7 @@ def arrangeStudents(request,id,yyyy,mm,dd,hh,min):
                         insert_values = 0
                         for i in range(temp):
                             obj = Arrangement()
-                            obj.student = Student.objects.get(student_id='100')
+                            obj.student = Student.objects.get(student_id='1')
                             obj.classroom = Classroom.objects.get(classroom_number=hall)
                             obj.examination = Examination.objects.get(id=id)
                             obj.date = date
@@ -604,6 +977,20 @@ def getClassrooms(request,id,yyyy,mm,dd,hh,min):
             obj1 = Classroom.objects.get(classroom_number=classroom)
             size = obj1.capacity.size
             data['classroom_list'].append({'classroom':classroom,'size':size})
+        return JsonResponse(data)
+
+@api_view(['GET'])
+def getInvigilationDetails(request,id,yyyy,mm,dd,hh,min):
+    if request.method == 'GET':
+        date = "{0}-{1}-{2}".format(yyyy, mm, dd)
+        time = "{0}:{1}".format(hh, min)
+        obj_list = Invigilation.objects.filter(examination__id=id, date=date, time=time)
+        faculty_list = []
+        for obj in obj_list:
+            temp = {'faculty_id':obj.faculty.faculty_id,'faculty_name' : obj.faculty.faculty_name,'classroom' : obj.classroom.classroom_number,'status' : obj.status}
+            faculty_list.append(temp)
+        data = {}
+        data['faculty_list'] = faculty_list
         return JsonResponse(data)
 
 @api_view(['GET'])

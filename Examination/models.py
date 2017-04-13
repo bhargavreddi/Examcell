@@ -42,6 +42,8 @@ class Subject(models.Model):
 class ClassroomCapacity(models.Model):
     size = models.IntegerField(default=24)
 
+    def __str__(self):
+        return "{0}".format(self.size)
 
 class Classroom(models.Model):
     classroom_number = models.CharField(max_length=20,primary_key=True)

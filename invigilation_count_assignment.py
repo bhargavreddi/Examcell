@@ -19,17 +19,17 @@ def yearRollUp():
             total = obj.total
 
             if(assigned == total):
-                remaining = 0
                 assigned = 0
                 total = 10
+                remaining = total
             elif assigned > total:
-                remaining = 0
                 total = 10 - (assigned - total)
                 assigned = 0
+                remaining = total
             else:
-                remaining = 0
                 total = 10 + (total - assigned)
                 assigned = 0
+                remaining = total
             obj.remaining = remaining
             obj.assigned = assigned
             obj.total = total
@@ -37,9 +37,9 @@ def yearRollUp():
         except Exception:
             obj = InvigilationCount()
             obj.faculty = Faculty.objects.get(faculty_id=faculty_tuple[0])
-            obj.remaining = 0
             obj.assigned = 0
             obj.total = 10
+            obj.remaining = obj.total
             obj.save()
-
+# InvigilationCount.objects.all().delete()
 yearRollUp()

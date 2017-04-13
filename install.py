@@ -32,6 +32,9 @@ eee.save()
 it = Department()
 it.name = 'Information Technology'
 it.save()
+unknown_dept = Department()
+unknown_dept.name = 'Unknown'
+unknown_dept.save()
 r13 = Regulation()
 r13.regulation = 'R13'
 r13.save()
@@ -44,9 +47,9 @@ cc24.save()
 cc36 = ClassroomCapacity()
 cc36.size = 36
 cc36.save()
-cc54 = ClassroomCapacity()
-cc54.size = 54
-cc54.save()
+cc56 = ClassroomCapacity()
+cc56.size = 56
+cc56.save()
 y1 = Year()
 y1.year = 1
 y1.save()
@@ -138,10 +141,10 @@ for subject in subjects:
     obj.save()
 
 obj = Student()
-obj.student_id = '100'
+obj.student_id = '1'
 obj.student_name = 'NULL'
 obj.student_semester = Semester.objects.get(semester=1)
 obj.student_year = Year.objects.get(year=1)
 obj.regulation = Regulation.objects.get(regulation='R13')
-obj.dept = Department.objects.get(name='Computer Science and Engineering')
+obj.dept = Department.objects.get(name='Unknown')
 obj.save()

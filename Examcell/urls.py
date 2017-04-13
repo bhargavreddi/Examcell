@@ -39,6 +39,13 @@ urlpatterns = [
     url(r'^api/retreiveClassrooms/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.retreiveClassrooms),
     url(r'^api/retreiveSubjects/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.retreiveSubjects),
     url(r'^api/studentsClassroom/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/(?P<cs>.*)/$',views.studentsClassroom),
+    url(r'^api/studentsSubject/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/(?P<sub_code>.*)/$',views.studentsSubject),
     url(r'^api/isSetAllocated/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.isSetAllocated),
     url(r'^api/setSubjects/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.setSubjects),
+    url(r'^api/getStudentDetails/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/(?P<regno>.*)/$',views.getStudentDetails),
+    url(r'^api/getInvigilationDetails/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/$',views.getInvigilationDetails),
+    url(r'^api/forceInvigilation/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/(?P<faculty>.*)/$',views.forceInvigilation),
+    url(r'^api/changeInvigilation/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/(?P<faculty>.*)/$',views.changeInvigilation),
+    url(r'^api/acceptInvigilation/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/(?P<faculty>.*)/$',views.acceptInvigilation),
+    url(r'^api/rejectInvigilation/(?P<id>[0-9]*)/(?P<yyyy>\d*)/(?P<mm>\d*)/(?P<dd>\d*)/(?P<hh>\d*)/(?P<min>\d*)/(?P<faculty>.*)/$',views.rejectInvigilation),
 ]
