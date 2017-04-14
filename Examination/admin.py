@@ -3,12 +3,12 @@ from django.contrib import admin
 # Register your models here.
 from Examination.models import Student, Faculty, Classroom, ClassroomCapacity, Regulation, Year, Semester, Department, \
     ExaminationType, Months, RegisteredStudents, Timetable, InvigilationCount, Arrangement, Examination,Subject, \
-    Invigilation
+    Invigilation, UserModel
 
 admin.site.register(Student)
 admin.site.register(Faculty)
 admin.site.register(Classroom)
-admin.site.register(ClassroomCapacity)
+admin.site.register(UserModel)
 admin.site.register(Regulation)
 admin.site.register(Year)
 admin.site.register(Semester)

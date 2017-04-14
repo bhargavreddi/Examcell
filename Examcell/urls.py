@@ -18,6 +18,7 @@ from Examcell import views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/get_departments/$',views.getDepartments),
+    url(r'^api/login/$',views.login),
     url(r'^api/get_regulations/$',views.getRegulations),
     url(r'^api/list_student_register/$',views.registerStudentList),
     url(r'^api/get_years/$',views.getYears),

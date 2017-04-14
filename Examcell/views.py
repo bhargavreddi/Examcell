@@ -3,6 +3,7 @@ import json
 from django.http.response import HttpResponse, HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
+from docx.shared import Cm
 from rest_framework import status
 from django.conf import settings
 from rest_framework.decorators import api_view
@@ -11,8 +12,8 @@ from Examination.serializer import StudentSerializer, DepartmentSerializer, Regu
     SemesterSerializer, ExaminationSerializer
 from Examination.models import Student, Department, Regulation, Year, Semester, Examination, FacultyTimetable, Faculty, \
     Day, Timetable, Subject, RegisteredStudents, ExaminationType, Classroom, Arrangement, ClassroomCapacity, \
-    Invigilation, InvigilationCount
-
+    Invigilation, InvigilationCount,UserModel
+from django.conf import settings as djangoSettings
 
 @api_view(['GET'])
 def removeRegisterStudents(request,pk):
@@ -430,6 +431,19 @@ def retreiveSubjects(request,id,yyyy,mm,dd,hh,min):
 
         return JsonResponse(data)
 
+@api_view(['POST'])
+def login(request):
+    status = {}
+    data = request.data
+    try:
+        obj = UserModel.objects.get(username=data['username'])
+        if obj.password != data['password']:
+            status['status'] = 'failed'
+        else:
+            status['status'] = 'success'
+    except Exception:
+        data['status'] = 'failed'
+    return JsonResponse(status)
 @api_view(['GET'])
 def studentsClassroom(request,id,yyyy,mm,dd,hh,min,cs):
     if request.method == 'GET':
@@ -441,6 +455,8 @@ def studentsClassroom(request,id,yyyy,mm,dd,hh,min,cs):
             student_list.append({'regno' : tuple[0],'set_number' : tuple[1]})
         data = {}
         data['student_list'] = student_list
+        data['url'] = djangoSettings.STATIC_ROOT + '/files/ ' + '{0}-{1}-{2}-'.format(Examination.objects.get(id=id).examination_name, date,
+                                                                                            cs)
         return JsonResponse(data)
 
 @api_view(['GET'])
@@ -448,6 +464,7 @@ def studentsSubject(request,id,yyyy,mm,dd,hh,min,sub_code):
     if request.method == 'GET':
         date = "{0}-{1}-{2}".format(yyyy, mm, dd)
         time = "{0}:{1}".format(hh, min)
+        branch = 'Computer Science and Engineering'
         student_list_tuple = Arrangement.objects.filter(examination__id=id, date=date, time=time,subject__subject_code = sub_code).values_list('student')
         student_list = []
         for tuple in student_list_tuple:
@@ -456,6 +473,8 @@ def studentsSubject(request,id,yyyy,mm,dd,hh,min,sub_code):
             student_list.append({'regno':tuple[0]})
         data = {}
         data['student_list'] = student_list
+        data['url'] = djangoSettings.STATIC_ROOT + '/files/ ' + '{0}-{1}-{2}-{3}-dform.docx'.format(Examination.objects.get(id=id).examination_name, date,branch,
+                                                                                            sub_code)
         obj = Timetable.objects.get(subject__subject_code=sub_code)
         data['start_set'] = obj.set_number
         data['max_set'] = obj.max_set
@@ -642,6 +661,11 @@ def setSubjects(request,id,yyyy,mm,dd,hh,min):
                 return JsonResponse(status)
         try:
             assignSetNumber(id,date,time)
+            for subject_dict in subject_list:
+                createDforms(id,date,time,subject_dict['subject'])
+            classrooms = Arrangement.objects.filter(examination__id=id, date=date, time=time).distinct().values_list('classroom')
+            for classroom in classrooms:
+                createSeatingPlan(id,date,time,classroom[0])
         except Exception as e:
             status = {
                 'status': 'failed'
@@ -780,7 +804,8 @@ def allocateInvigilation(exam_id,date,time,classroom_list,drawing_hall_list):
     time_array = time.split(':')
     exam_obj = Examination.objects.get(id=exam_id)
     year = exam_obj.examination_name.split('-')
-    year = year[0]
+    year_dict = {'1': 'I', '2' : 'II' , '3' : 'III' , '4':'IV'}
+    year = year_dict[year[0]]
     if exam_obj.type.type == "Mid Term":
         duration = [1,30]
     else:
@@ -831,6 +856,183 @@ def allocateInvigilation(exam_id,date,time,classroom_list,drawing_hall_list):
             inv_count.save()
             sendInvigilationRequest(exam_id,faculty_list[index], date_temp, time, hall)
             index = index + 1
+
+#Document Generation
+def createDforms(exam_id,date,time,subject_code):
+    subject_obj = Timetable.objects.get(examination__id = exam_id,date = date,time=time,subject__subject_code=subject_code)
+    start_set = subject_obj.set_number
+    max_set = subject_obj.max_set
+    examination_name = Examination.objects.get(id=exam_id).examination_name
+    branch = 'Computer Science and Engineering'
+    from docx import Document
+    document = Document('template.docx')
+    document.add_paragraph('Name of Exam: ' + examination_name)
+    document.add_paragraph('Branch: '+branch)
+    document.add_paragraph('Date: ' + date+'                                                                                        Time:'+time )
+    document.add_paragraph('Subject Name & Subject Code: ' + Subject.objects.get(subject_code=subject_code).subject_name + ' & ' + subject_code)
+    table = document.add_table(rows = 1,cols = max_set)
+    cells = table.rows[0].cells
+    sections = document.sections
+    margin = 1
+    for section in sections:
+        section.top_margin = Cm(margin)
+        section.bottom_margin = Cm(margin)
+        section.left_margin = Cm(margin)
+        section.right_margin = Cm(margin)
+    for i in range(1,max_set + 1):
+        cells[i-1].text = str(i)
+    students = Arrangement.objects.filter(examination__id = exam_id,date = date,time = time,subject__subject_code=subject_code)
+    index = start_set - 1
+    cells = table.add_row().cells
+    for student in students:
+        if student.student.student_id == '1':
+            continue
+        cells[index].text = student.student.student_id
+        index = index + 1
+        if index == max_set:
+            cells = table.add_row().cells
+            index = 0
+        document.save(
+            djangoSettings.STATIC_ROOT + '/files/ ' + '{0}-{1}-{2}-{3}-dform.docx'.format(examination_name, date,branch,
+                                                                                            subject_code))
+
+def createHallPlan(exam_id,date,time,classroom):
+    examination_name = Examination.objects.get(id=exam_id).examination_name
+    branch = 'Computer Science and Engineering'
+    from docx import Document
+    document = Document('template.docx')
+    document.add_paragraph('Name of Exam: ' + examination_name)
+    document.add_paragraph('Branch: '+branch)
+    document.add_paragraph('Date: ' + date+'                                                                                        Time:'+time )
+    document.add_paragraph('Classroom : ' + classroom)
+    classroom = Classroom.objects.get(classroom_number=classroom)
+    size = classroom.capacity.size
+    if size == 56:
+        cols = 7
+        rows = 14
+    else:
+        rows = 6
+        cols = 8
+    table = document.add_table(rows = rows,cols = cols)
+    sections = document.sections
+    margin = 1
+    for section in sections:
+        section.top_margin = Cm(margin)
+        section.bottom_margin = Cm(margin)
+        section.left_margin = Cm(margin)
+        section.right_margin = Cm(margin)
+    students = Arrangement.objects.filter(examination__id=exam_id, date=date, time=time,classroom__classroom_number=classroom)
+    row_index = 0
+    cols = 0
+    if size == 56:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [1,3,5]:
+                    cols = cols + 1
+    elif size == 36:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [2,5]:
+                    cols = cols + 1
+        pass
+    else:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [2]:
+                    cols = 6
+        pass
+
+        document.save(
+            djangoSettings.STATIC_ROOT + '/files/ ' + '{0}-{1}-{2}-hallplan.docx'.format(examination_name, date,
+                                                                                            classroom))
+
+def createSeatingPlan(exam_id,date,time,classroom):
+    examination_name = Examination.objects.get(id=exam_id).examination_name
+    branch = 'Computer Science and Engineering'
+    from docx import Document
+    document = Document('template.docx')
+    document.add_paragraph('Name of Exam: ' + examination_name)
+    document.add_paragraph('Branch: '+branch)
+    document.add_paragraph('Date: ' + date+'                                                                                        Time:'+time )
+    document.add_paragraph('Classroom : ' + classroom)
+    classroom = Classroom.objects.get(classroom_number=classroom)
+    size = classroom.capacity.size
+    if size == 56:
+        cols = 7
+        rows = 14 * 2
+    else:
+        rows = 6 * 2
+        cols = 8
+    table = document.add_table(rows = rows,cols = cols)
+    sections = document.sections
+    margin = 1
+    for section in sections:
+        section.top_margin = Cm(margin)
+        section.bottom_margin = Cm(margin)
+        section.left_margin = Cm(margin)
+        section.right_margin = Cm(margin)
+    students = Arrangement.objects.filter(examination__id=exam_id, date=date, time=time,classroom__classroom_number=classroom)
+    row_index = 0
+    cols = 0
+    if size == 56:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            cells = table.rows[row_index].cells
+            cells[cols].text = str(Arrangement.objects.get(examination__id=exam_id, date=date, time=time,student__student_id = student.student.student_id).set_number)
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [1,3,5]:
+                    cols = cols + 1
+    elif size == 36:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            cells = table.rows[row_index].cells
+            cells[cols].text = str(Arrangement.objects.get(examination__id=exam_id, date=date, time=time,student__student_id = student.student.student_id).set_number)
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [2,5]:
+                    cols = cols + 1
+        pass
+    else:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            cells = table.rows[row_index].cells
+            cells[cols].text = str(Arrangement.objects.get(examination__id=exam_id, date=date, time=time,student__student_id = student.student.student_id).set_number)
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [2]:
+                    cols = 6
+        pass
+
+    document.save(djangoSettings.STATIC_ROOT + '/files/ '+'{0}-{1}-{2}-seatingplan.docx'.format(examination_name,date,classroom))
+
 
 @api_view(['POST'])
 def arrangeStudents(request,id,yyyy,mm,dd,hh,min):
@@ -950,6 +1152,10 @@ def arrangeStudents(request,id,yyyy,mm,dd,hh,min):
         status = {
             'status' : 'success'
         }
+        classrooms = Arrangement.objects.filter(examination__id=id, date=date, time=time).distinct().values_list(
+            'classroom')
+        for classroom in classrooms:
+            createHallPlan(id, date, time, classroom[0])
         return JsonResponse(status)
 
 @api_view(['GET'])

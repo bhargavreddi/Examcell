@@ -1,3 +1,5 @@
+from docx.shared import Cm
+
 __author__ = 'Bhargav'
 import django
 import sys,os
@@ -5,106 +7,185 @@ sys.path.append("/home/bhargav/Examcell")
 sys.path.append("/home/mvgrexamcell/Examcell")
 os.environ["DJANGO_SETTINGS_MODULE"] = "Examcell.settings"
 django.setup()
-from Examination.models import FacultyTimetable, Faculty, InvigilationCount, Invigilation, Examination
+from Examination.models import Timetable, Examination, Subject, Arrangement, Classroom
+from django.conf import settings as djangoSettings
 
-time1 = "10:00"
-time2 = "13:00"
-day = "Monday"
-exam = ['III']
-limit = 10
+def createDforms(exam_id,date,time,subject_code):
+    subject_obj = Timetable.objects.get(examination__id = exam_id,date = date,time=time,subject__subject_code=subject_code)
+    start_set = subject_obj.set_number
+    max_set = subject_obj.max_set
+    examination_name = Examination.objects.get(id=exam_id).examination_name
+    branch = 'Computer Science and Engineering'
+    from docx import Document
+    document = Document('template.docx')
+    document.add_paragraph('Name of Exam: ' + examination_name)
+    document.add_paragraph('Branch: '+branch)
+    document.add_paragraph('Date: ' + date+'                                                                                        Time:'+time )
+    document.add_paragraph('Subject Name & Subject Code: ' + Subject.objects.get(subject_code=subject_code).subject_name + ' & ' + subject_code)
+    table = document.add_table(rows = 1,cols = max_set)
+    cells = table.rows[0].cells
+    sections = document.sections
+    margin = 1
+    for section in sections:
+        section.top_margin = Cm(margin)
+        section.bottom_margin = Cm(margin)
+        section.left_margin = Cm(margin)
+        section.right_margin = Cm(margin)
+    for i in range(1,max_set + 1):
+        cells[i-1].text = str(i)
+    students = Arrangement.objects.filter(examination__id = exam_id,date = date,time = time,subject__subject_code=subject_code)
+    index = start_set - 1
+    cells = table.add_row().cells
+    for student in students:
+        if student.student.student_id == '1':
+            continue
+        cells[index].text = student.student.student_id
+        index = index + 1
+        if index == max_set:
+            cells = table.add_row().cells
+            index = 0
+        document.save(
+            djangoSettings.STATIC_ROOT + '/files/ ' + '{0}-{1}-{2}-{3}-dform.docx'.format(examination_name, date,branch,
+                                                                                            subject_code))
 
-
-time = ["9:00","9:50","10:40","11:30","12:20","13:10","14:00","14:50","15:40"]
-def compare(time1,time2):
-    time_array1 = time1.split(":")
-    time_array2 = time2.split(":")
-
-    if int(time_array1[0]) > int(time_array2[0]):
-        return True
-    elif int(time_array1[0]) == int(time_array2[0]):
-        if int(time_array1[1]) == int(time_array2[1]):
-            return False
-        elif int(time_array1[1]) > int(time_array2[1]):
-            return True
-        else:
-            return False
+def createHallPlan(exam_id,date,time,classroom):
+    examination_name = Examination.objects.get(id=exam_id).examination_name
+    branch = 'Computer Science and Engineering'
+    from docx import Document
+    document = Document('template.docx')
+    document.add_paragraph('Name of Exam: ' + examination_name)
+    document.add_paragraph('Branch: '+branch)
+    document.add_paragraph('Date: ' + date+'                                                                                        Time:'+time )
+    document.add_paragraph('Classroom : ' + classroom)
+    classroom = Classroom.objects.get(classroom_number=classroom)
+    size = classroom.capacity.size
+    if size == 56:
+        cols = 7
+        rows = 14
     else:
-        return False
-def inIndex(t):
-    index = 0
-    values = range(len(time))
-    for i in values:
-        if(compare(t,time[i]) == False):
-            index = i
-            break
+        rows = 6
+        cols = 8
+    table = document.add_table(rows = rows,cols = cols)
+    sections = document.sections
+    margin = 1
+    for section in sections:
+        section.top_margin = Cm(margin)
+        section.bottom_margin = Cm(margin)
+        section.left_margin = Cm(margin)
+        section.right_margin = Cm(margin)
+    students = Arrangement.objects.filter(examination__id=exam_id, date=date, time=time,classroom__classroom_number=classroom)
+    row_index = 0
+    cols = 0
+    if size == 56:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [1,3,5]:
+                    cols = cols + 1
+    elif size == 36:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [2,5]:
+                    cols = cols + 1
+        pass
     else:
-        return 7
-    return index
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [2]:
+                    cols = 6
+        pass
 
-def outIndex(t):
-    index = 0
-    values = range(len(time))
-    values.reverse()
-    for i in values:
-        if(compare(t,time[i]) == True):
-            index = i
-            break
+        document.save(
+            djangoSettings.STATIC_ROOT + '/files/ ' + '{0}-{1}-{2}-hallplan.docx'.format(examination_name, date,
+                                                                                            classroom))
+
+def createSeatingPlan(exam_id,date,time,classroom):
+    examination_name = Examination.objects.get(id=exam_id).examination_name
+    branch = 'Computer Science and Engineering'
+    from docx import Document
+    document = Document('template.docx')
+    document.add_paragraph('Name of Exam: ' + examination_name)
+    document.add_paragraph('Branch: '+branch)
+    document.add_paragraph('Date: ' + date+'                                                                                        Time:'+time )
+    document.add_paragraph('Classroom : ' + classroom)
+    classroom = Classroom.objects.get(classroom_number=classroom)
+    size = classroom.capacity.size
+    if size == 56:
+        cols = 7
+        rows = 14 * 2
     else:
-        return 7
-    return index
+        rows = 6 * 2
+        cols = 8
+    table = document.add_table(rows = rows,cols = cols)
+    sections = document.sections
+    margin = 1
+    for section in sections:
+        section.top_margin = Cm(margin)
+        section.bottom_margin = Cm(margin)
+        section.left_margin = Cm(margin)
+        section.right_margin = Cm(margin)
+    students = Arrangement.objects.filter(examination__id=exam_id, date=date, time=time,classroom__classroom_number=classroom)
+    row_index = 0
+    cols = 0
+    if size == 56:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            cells = table.rows[row_index].cells
+            cells[cols].text = str(Arrangement.objects.get(examination__id=exam_id, date=date, time=time,student__student_id = student.student.student_id).set_number)
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [1,3,5]:
+                    cols = cols + 1
+    elif size == 36:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            cells = table.rows[row_index].cells
+            cells[cols].text = str(Arrangement.objects.get(examination__id=exam_id, date=date, time=time,student__student_id = student.student.student_id).set_number)
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [2,5]:
+                    cols = cols + 1
+        pass
+    else:
+        for student in students:
+            cells = table.rows[row_index].cells
+            cells[cols].text = student.student.student_id
+            row_index = row_index + 1
+            cells = table.rows[row_index].cells
+            cells[cols].text = str(Arrangement.objects.get(examination__id=exam_id, date=date, time=time,student__student_id = student.student.student_id).set_number)
+            row_index = row_index + 1
+            if row_index == rows:
+                row_index= 0
+                cols = cols + 1
+                if cols in [2]:
+                    cols = 6
+        pass
 
+    document.save(djangoSettings.STATIC_ROOT + '/files/ '+'{0}-{1}-{2}-seatingplan.docx'.format(examination_name,date,classroom))
 
+createDforms(1,'2017-04-03','9:30','RT42051')
+createHallPlan(1,'2017-04-03','9:30','CS-10')
+createSeatingPlan(1,'2017-04-03','9:30','CS-10')
 
-def allocateInvigilation(time1,time2,day,year,limit,examination_id):
-    fac_list = FacultyTimetable.objects.filter(day__day = day).values()
-    indices = {0:'hour1',1:'hour2',2:'hour3',3:'hour4',4:'hour5',5:'hour6',6:'hour7',7:'hour8'}
-    index1= outIndex(time1)
-    index2 = inIndex(time2)
-    count = 0
-    faculty_list = []
-    flag = True
-    for d in fac_list:
-        flag = True
-        for i in range(index1,index2):
-            try:
-                array = d[indices[i]].split('-')
-                array = array[1]
-            except Exception:
-                array = 'None'
-            if (d[indices[i]] == 'Free' or array in exam):
-                pass
-            else:
-                flag = False
-        if (flag):
-            fac_obj_count = InvigilationCount.objects.get(faculty__faculty_id=d['faculty_id'])
-            inv_count = Invigilation.objects.filter(faculty__faculty_id=d['faculty_id'],examination = Examination.objects.get(id = examination_id)).count()
-            if fac_obj_count.remaining != 0 and inv_count <2 :
-                faculty_list.append(d['faculty_id'])
-                count = count + 1
-            if count == limit:
-                break
-
-    if count < limit:
-        for d in fac_list:
-            if d['faculty_id'] in faculty_list:
-                pass
-            else:
-                inv_count = Invigilation.objects.filter(faculty__faculty_id=d['faculty_id'],
-                                                        examination=Examination.objects.get(id=examination_id)).count()
-                if inv_count < 2:
-                    faculty_list.append(d['faculty_id'])
-                    count = count + 1
-            if count == limit:
-                break
-        else:
-            for d in fac_list:
-                if d['faculty_id'] in faculty_list:
-                    pass
-                else:
-                    faculty_list.append(d['faculty_id'])
-                    count = count + 1
-                if count == limit:
-                    break
-    return faculty_list
-
-print allocateInvigilation(time1,time2,day,exam,limit,1)

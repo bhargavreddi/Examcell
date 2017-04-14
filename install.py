@@ -113,6 +113,7 @@ while True:
     obj.faculty_id = id
     obj.faculty_name = name
     obj.dept = Department.objects.all().get(name='Computer Science and Engineering')
+    obj.email = 'bhargav2014duggu@gmail.com'
     obj.save()
     row = row + 1
 

@@ -30,6 +30,7 @@ class Faculty(models.Model):
     faculty_id = models.CharField(max_length=20, primary_key=True)
     faculty_name = models.CharField(max_length=225)
     dept = models.ForeignKey(Department)
+    email = models.CharField(max_length=30)
     def __str__(self):
         return self.faculty_id
 class Subject(models.Model):
@@ -133,3 +134,7 @@ class FacultyTimetable(models.Model):
     hour6 = models.CharField(max_length=30)
     hour7 = models.CharField(max_length=30)
     hour8 = models.CharField(max_length=30)
+
+class UserModel(models.Model):
+    username = models.CharField(max_length = 50,primary_key=True)
+    password = models.CharField(max_length=255)
